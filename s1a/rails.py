@@ -31,7 +31,7 @@ from s1a.pricing import cost_usd
 from s1a.spec import Json, RailSpec, Verdict
 
 QUESTION = "check"
-RAIL_MODEL_NAMES = ("jev", "clm", "laya", "laya-served")
+RAIL_MODEL_NAMES = ("jev", "seff", "clm", "laya", "laya-served")
 BANDS = ("allow", "uncertain", "act", "failure")  # a labelled-set row's outcome; failure: the decision itself failed
 
 

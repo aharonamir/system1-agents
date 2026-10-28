@@ -13,6 +13,7 @@ from openjiuwen.harness.tools.browser_move.utils.env import DEFAULT_PLAYWRIGHT_M
 ROOT = Path(__file__).resolve().parents[1]
 HOME = Path(os.environ["S1A_HOME"]).resolve() if os.environ.get("S1A_HOME") else ROOT  # runtime output root
 JEV_ENV = ("TYPESAFE_API_KEY", "TYPESAFE_API_URL", "TYPESAFE_MODEL", "OPENROUTER_API_KEY")  # read raw by wire.py
+SEFF_ENV = ("SEFF_API_KEY", "SEFF_API_URL", "SEFF_MODEL")  # read raw by seff.py
 ENV_ALIASES = (  # OPENROUTER_* stands in for the chat model's LLM_*
     ("LLM_API_KEY", "OPENROUTER_API_KEY"),
     ("LLM_BASE_URL", "OPENROUTER_BASE_URL"),
@@ -32,7 +33,10 @@ def load_env() -> None:
     """The repo's own .env, then the openjiuwen checkout's (a dev install); exported variables win."""
     load_dotenv(ROOT / ".env", override=False)
     load_repo_dotenv()
-    for name in JEV_ENV:  # a whitespace-only key is an empty key, reported at startup rather than as a 401 later
+    for name in (
+        *JEV_ENV,
+        *SEFF_ENV,
+    ):  # a whitespace-only key is an empty key, reported at startup rather than as a 401 later
         if name in os.environ:
             os.environ[name] = os.environ[name].strip()
     for alias, source in ENV_ALIASES:

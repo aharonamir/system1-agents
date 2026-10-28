@@ -31,8 +31,8 @@ INSTRUCTIONS = (
     "constraint puzzles or free-text generation. list_agents gives every agent's flags: a browser agent takes "
     "--model jev --goal '...' and needs a chat-model key (OPENAI_API_KEY or LLM_API_KEY plus MODEL_NAME), a Jev key "
     "(TYPESAFE_API_KEY or OPENROUTER_API_KEY) and Node for @playwright/mcp; a tool agent takes --model, --rethink and "
-    "--episodes; a rail takes --labelled-set. decide accepts model jev (default), clm, laya, cua or laya-served; local models "
-    "need their optional extra and no Jev key, laya-served needs LAYA_SERVED_URL. run_agent reports progress per "
+    "--episodes; a rail takes --labelled-set. decide accepts model jev (default), seff, clm, laya, cua or laya-served; local models "
+    "need their optional extra and no Jev key, seff needs SEFF_API_URL and SEFF_API_KEY, laya-served needs LAYA_SERVED_URL. run_agent reports progress per "
     "episode or browser step when the request carries a progressToken."
 )
 
@@ -182,12 +182,12 @@ async def decide(
     state: dict[str, Any],
     options: dict[str, str],
     rules: str,
-    model: Literal["jev", "clm", "laya", "laya-served", "cua"] = "jev",
+    model: Literal["jev", "seff", "clm", "laya", "laya-served", "cua"] = "jev",
 ) -> Decision:
     """One choice question: the chosen key, probabilities, confidence (= max p) and decision latency in ms.
 
-    Use jev over HTTP (default), laya/cua locally after installing the matching extra, or laya-served against a
-    running Laya server (LAYA_SERVED_URL). Local model loading
+    Use jev over HTTP (default), seff against Seff's own host (SEFF_API_URL/SEFF_API_KEY), laya/cua locally after
+    installing the matching extra, or laya-served against a running Laya server (LAYA_SERVED_URL). Local model loading
     is excluded from the reported latency.
     """
     async with _one_at_a_time(f"decide ({model})"):

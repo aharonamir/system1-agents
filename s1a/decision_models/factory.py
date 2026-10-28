@@ -13,10 +13,12 @@ from s1a.decision_models.cua_four_b import CuaFourBModel
 from s1a.decision_models.jev import JevModel
 from s1a.decision_models.laya import LayaModel
 from s1a.decision_models.omnijev import OmniJevModel
+from s1a.decision_models.seff import SeffModel
 from s1a.decision_models.served import ServedLayaModel
 
 DECISION_MODEL_NAMES = (
     "jev",
+    "seff",
     "clm",
     "laya",
     "laya-served",
@@ -28,10 +30,12 @@ DECISION_MODEL_NAMES = (
 
 
 def build_model(model_name: str, *, seed: int = 0, rule: tuple[str, Rule] | None = None) -> DecisionModel:
-    """``jev``, ``clm``, ``laya``, ``laya-served``, ``cua`` and ``omnijev`` from the environment, ``random`` from the seed, ``rule`` from the agent's baseline."""
+    """``jev``, ``seff``, ``clm``, ``laya``, ``laya-served``, ``cua`` and ``omnijev`` from the environment, ``random`` from the seed, ``rule`` from the agent's baseline."""
     match model_name:
         case "jev":
             return JevModel.from_env()
+        case "seff":
+            return SeffModel.from_env()  # Jev's wire schema on Seff's own host; free and text-only
         case "clm":
             return ClmModel.from_env()  # CLM over HTTP; no torch, no cloud key
         case "laya":
