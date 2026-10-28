@@ -294,7 +294,10 @@ class TestJevModel(IsolatedAsyncioTestCase):
 
 class TestFromEnv(TestCase):
     def test_typesafe_when_its_key_is_set_and_no_proxy_url_overrides_it(self) -> None:
-        with patch.dict(os.environ, {"TYPESAFE_API_KEY": "k", "TYPESAFE_API_URL": "", "OPENROUTER_API_KEY": ""}):
+        with patch.dict(
+            os.environ,
+            {"TYPESAFE_API_KEY": "k", "TYPESAFE_API_URL": "", "TYPESAFE_MODEL": "", "OPENROUTER_API_KEY": ""},
+        ):
             decision_model = JevModel.from_env()
         self.assertEqual(decision_model.model, wire.TYPESAFE_DEFAULT_MODEL)
         self.assertEqual(decision_model._transport.url, wire.TYPESAFE_DECISIONS_URL)

@@ -1103,7 +1103,12 @@ class TestDecisionsClientFromEnv(TestCase):
     """The two decisions backends read distinct keys and never send one backend's key to the other."""
 
     def test_typesafe_uses_its_own_key_url_and_model(self) -> None:
-        env = {"TYPESAFE_API_KEY": "ts-key", "OPENROUTER_API_KEY": "or-key", "TYPESAFE_API_URL": "https://proxy.test/"}
+        env = {
+            "TYPESAFE_API_KEY": "ts-key",
+            "OPENROUTER_API_KEY": "or-key",
+            "TYPESAFE_API_URL": "https://proxy.test/",
+            "TYPESAFE_MODEL": "",
+        }
         with mock.patch.dict("os.environ", env, clear=False):
             client = wire.client_from_env("typesafe", timeout_s=5.0)
 
