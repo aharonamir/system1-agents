@@ -8,6 +8,7 @@ Every front that asks "which one" (the tool loop, the browser policy, the rails,
 talks only to `DecisionModel`; the wire client is private to `s1a/decision_models/`. A decision model is a classifier over options the caller enumerates. It
 reads a state and returns a distribution over the offered keys. Hugging Face writes "System 1 decision model" and
 TypeSafe "System One model". This repository uses the terms interchangeably. `--model` picks the backend: `jev` (TypeSafe Jev over HTTP),
+`seff` (Seff's own System One host over HTTP, Jev's wire schema, free),
 `clm` (CLM's `clm-serve` over HTTP, see [clm.md](clm.md)),
 `laya` (in process, behind `uv sync --extra laya`), `laya-served` (Laya served over HTTP by system1-omni, see
 [served-laya.md](served-laya.md)), `cua` (Cua-S1 Nano in process, behind `uv sync --extra cua`),
@@ -58,6 +59,7 @@ shorthands; `warm()` and `close()` open and release the backend.
 | `--model` | class | `name` | notes |
 |---|---|---|---|
 | `jev` | `JevModel(transport)` | `jev` | the request body every front sent before the layer existed, byte for byte; `from_env` picks TypeSafe or the OpenRouter proxy (see [configuration.md](configuration.md)) |
+| `seff` | `SeffModel(transport)` | `seff` | Jev's request body and reply over HTTP to a different host; `from_env` reads `SEFF_API_KEY`, `SEFF_API_URL`, `SEFF_MODEL` (default `seff-1.0`) and `SEFF_TIMEOUT_S`; free (`bills_input_tokens = False`) and text-only; choice and noul |
 | `clm` | `ClmModel(client, model=)` | `clm` | CLM behind `/v1/systemone`: a frozen Qwen3-8B encoder and two projection heads, scored by an engine that owns everything after the encoder. One POST per decision; `MODEL_SERVICE_CONFIG_ERROR` without `CLM_URL`, `MODEL_CALL_FAILED` when nothing is listening, on an error status, or on a body with no `answers`. Records `url`, the `X-Request-Id` it sent and `served_by` (the served names, read once — by `warm()` on the agent fronts, or on the first decision for `decide`/`probe`); choice and noul ([docs/clm.md](clm.md)) |
 | `laya` | `LayaModel(agent, model=)` | `laya` | one forward pass per call on a thread; `MODEL_SERVICE_CONFIG_ERROR` when `input_tokens` fills the window (Laya cuts the state silently; see `LAYA_MAX_LEN` and `LAYA_HEAD_MAX_LEN` in [configuration.md](configuration.md)); `ValueError` and `RuntimeError` from the library become `MODEL_CALL_FAILED` |
 | `laya-served` | `ServedLayaModel(client, model=, max_len=)` | `laya-served` | one `POST /v1/systemone` per request to `LAYA_SERVED_URL`, body built with `laya_question()` as for `laya`; one retry on a dropped connection, 502 or 504, and after `Retry-After` on 503, all within `LAYA_SERVED_TIMEOUT_S`; the same window check as `laya`; `model` is the served checkpoint and revision, and `raw` keeps `served_by`, `url`, `request_id` and `server_timing` (see [served-laya.md](served-laya.md)) |
@@ -107,8 +109,9 @@ real servers in `tests/data/served_laya/`. Nothing patches `httpx`.
    a `Decision`. Keep any heavy import inside `from_env()`.
 2. A `case` in `factory.build_model` and the name in `DECISION_MODEL_NAMES`, `tool/loop.py::MODEL_NAMES`,
    `browser/browse.py::BROWSER_MODEL_NAMES`, `rails.RAIL_MODEL_NAMES`, `cli.DECIDE_MODEL_NAMES` and the
-   `mcp_server.decide` `Literal`, plus the `match` in `tool/loop.py` and `browser/browse.py` when the backend is
-   a decision model; `tests/test_served_laya_registration.py` finds a list that has `laya` without `laya-served`.
+   `mcp_server.decide` `Literal`, plus the `match` in `tool/loop.py`, `browser/browse.py` and the membership check
+   in `tool/series.py` when the backend is a decision model; `tests/test_served_laya_registration.py` finds a list
+   that has `laya` without `laya-served`, and `tests/test_seff_registration.py` one that has `jev` without `seff`.
 3. `tests/test_decision_models_<backend>.py` with `Test<Backend>Contract(DecisionModelContract, IsolatedAsyncioTestCase)`
    plus the backend's mapping tests; a fake for its SDK lives in that file.
 4. An optional extra in `pyproject.toml` and an env block in `.env.example` when it needs a dependency.
