@@ -47,7 +47,7 @@ validation; `docs/decision-models.md`), `s1a/decision_models/wire.py` (the HTTP 
 | `--model` | who answers | runs | reads |
 |---|---|---|---|
 | `jev` | [TypeSafe Jev](https://typesafe.ai) | over HTTP with a key; 350 to 500 ms, $0.042 per million input tokens | up to 32K tokens of state |
-| `seff` | Seff (a remote System One host) | over HTTP with `SEFF_API_URL` and `SEFF_API_KEY`; free, Jev's wire schema, text only | up to 32K tokens of state |
+| `seff` | Seff (a remote System One host) | over HTTP with `SEFF_API_URL` and `SEFF_API_KEY`; free, Jev's wire schema, text only | the host's limit (unverified here) |
 | `laya` | [Laya](https://huggingface.co/convaiinnovations/laya) (`convaiinnovations/laya`, 0.4B) | in process, `uv sync --extra laya`; no key | a 512 to 1024 token window |
 | `cua` | [Cua-S1 Nano](https://huggingface.co/cua-ai/cua-s1-nano-0.1) (`cua-ai/cua-s1-nano-0.1`, 855K) | in process, `uv sync --extra cua`; no key | a 256-byte context (header, goal, state, then rules), 96 bytes per option |
 | `omnijev` | [OmniJev](https://github.com/tinnel123666888/OmniJev) (Qwen3.5 VL, 0.8B by default, 2B or 4B) | in process, browser agents only, `uv sync --extra omnijev` and a clone named by `OMNIJEV_REPO`; no key; a GPU for useful speed | a viewport screenshot per tick, plus the text state (recent actions first, page text capped at 2,000 characters) |

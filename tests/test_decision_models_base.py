@@ -22,6 +22,7 @@ from s1a.decision_models import (
     RandomModel,
     RuleModel,
     ScriptedModel,
+    SeffModel,
 )
 from s1a.decision_models.omnijev import OmniJevModel
 from s1a.decision_models.served import ServedLayaModel
@@ -32,6 +33,7 @@ class TestBillingContract(TestCase):
     def test_every_backend_declares_whether_input_tokens_use_jev_pricing(self) -> None:
         expected = {
             JevModel: True,
+            SeffModel: False,
             LayaModel: False,
             ServedLayaModel: False,
             CuaS1Model: False,
@@ -41,7 +43,8 @@ class TestBillingContract(TestCase):
             RuleModel: False,
             ScriptedModel: False,
         }
-        backends = set(DecisionModel.__subclasses__())
+        # shipped backends only: a test double under tests/ (e.g. NoDecisionModel) is not a product backend
+        backends = {b for b in _all_subclasses(DecisionModel) if b.__module__.startswith("s1a.")}
         self.assertLessEqual(set(expected), backends)
         for backend in backends:
             with self.subTest(backend=backend.__name__):
@@ -49,6 +52,15 @@ class TestBillingContract(TestCase):
                 self.assertIsInstance(declared, bool)
                 if backend in expected:
                     self.assertIs(declared, expected[backend])
+
+
+def _all_subclasses(cls: type[DecisionModel]) -> set[type[DecisionModel]]:
+    """Every descendant, not only the direct subclasses: ``SeffModel`` subclasses ``JevModel``."""
+    found: set[type[DecisionModel]] = set()
+    for child in cls.__subclasses__():
+        found.add(child)
+        found |= _all_subclasses(child)
+    return found
 
 
 class TestScriptedContract(DecisionModelContract, IsolatedAsyncioTestCase):

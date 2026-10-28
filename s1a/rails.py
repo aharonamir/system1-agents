@@ -266,7 +266,7 @@ def parser(spec: RailSpec) -> argparse.ArgumentParser:
         "--model",
         choices=RAIL_MODEL_NAMES,
         default="jev",
-        help="who answers the question: jev, clm or laya-served over HTTP, laya in process",
+        help="who answers the question: jev, seff, clm or laya-served over HTTP, laya in process",
     )
     return build
 

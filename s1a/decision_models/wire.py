@@ -107,7 +107,15 @@ def _retry_after_s(response: httpx.Response, *, fallback: float) -> float:
 class JevDecisionsClient:
     """Async HTTP client for the decisions endpoint with a warm keep-alive connection."""
 
-    def __init__(self, *, api_key: str, url: str, model: str, timeout_s: float) -> None:
+    def __init__(
+        self,
+        *,
+        api_key: str,
+        url: str,
+        model: str,
+        timeout_s: float,
+        transport: httpx.AsyncBaseTransport | None = None,
+    ) -> None:
         if not api_key:
             raise build_error(
                 StatusCode.MODEL_SERVICE_CONFIG_ERROR,
@@ -122,7 +130,11 @@ class JevDecisionsClient:
         self.url = url
         self.model = model
         self._timeout_s = timeout_s  # the deadline for one decision, retries included
-        self._client = httpx.AsyncClient(timeout=timeout_s, headers={"Authorization": f"Bearer {api_key}"})
+        self._client = httpx.AsyncClient(
+            timeout=timeout_s,
+            headers={"Authorization": f"Bearer {api_key}"},
+            transport=transport,  # a test seam (httpx.MockTransport); None keeps the real network transport
+        )
 
     async def warm(self) -> None:
         """Open the TLS connection ahead of the first decision; failures here are ignored."""

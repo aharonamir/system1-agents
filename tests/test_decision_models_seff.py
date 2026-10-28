@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Any
 from unittest import IsolatedAsyncioTestCase, TestCase
 from unittest.mock import patch
 
@@ -19,7 +18,7 @@ from openjiuwen.core.common.exception.codes import StatusCode
 from openjiuwen.core.common.exception.errors import BaseError
 
 from decision_model_contract import OBSERVATION, PICK, DecisionModelContract
-from s1a.decision_models import DecisionModel, Json, Observation, ScriptedTransport, SeffModel, wire
+from s1a.decision_models import DecisionModel, Json, Observation, ScriptedTransport, SeffModel
 from s1a.decision_models import seff
 
 SEFF_ENV = {
@@ -70,13 +69,8 @@ class TestConnectivity(IsolatedAsyncioTestCase):
             seen.append(request)
             return httpx.Response(200, json=REPLY)
 
-        real_client = httpx.AsyncClient
-
-        def with_mock_transport(**kwargs: Any) -> httpx.AsyncClient:
-            return real_client(transport=httpx.MockTransport(handler), **kwargs)
-
-        with patch.dict(os.environ, SEFF_ENV), patch.object(wire.httpx, "AsyncClient", with_mock_transport):
-            model = SeffModel.from_env()
+        with patch.dict(os.environ, SEFF_ENV):
+            model = SeffModel.from_env(transport=httpx.MockTransport(handler))
         try:
             decision = await model.decide_many(OBSERVATION, {"pick": PICK})
         finally:
@@ -148,11 +142,11 @@ class TestFromEnv(TestCase):
 
 class TestLiveSeff(IsolatedAsyncioTestCase):
     async def test_a_live_simple_decision_reaches_the_endpoint(self) -> None:
+        if os.getenv("S1A_LIVE_SEFF") != "1":
+            self.skipTest("set S1A_LIVE_SEFF=1 (with SEFF_API_URL and SEFF_API_KEY) for the live Seff smoke")
         from s1a import config
 
         config.load_env()
-        if not (os.getenv("SEFF_API_URL") and os.getenv("SEFF_API_KEY")):
-            self.skipTest("set SEFF_API_URL and SEFF_API_KEY (or fill .env) for the live Seff smoke")
         model = SeffModel.from_env()
         try:
             answer = await model.choose(

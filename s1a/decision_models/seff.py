@@ -6,6 +6,7 @@ from __future__ import annotations
 import math
 import os
 
+import httpx
 from openjiuwen.core.common.exception.codes import StatusCode
 from openjiuwen.core.common.exception.errors import build_error
 
@@ -56,13 +57,16 @@ class SeffModel(JevModel):
     supports_images = False
 
     @classmethod
-    def from_env(cls, *, timeout_s: float | None = None) -> "SeffModel":
+    def from_env(
+        cls, *, timeout_s: float | None = None, transport: httpx.AsyncBaseTransport | None = None
+    ) -> "SeffModel":
         """Seff from ``SEFF_API_KEY`` / ``SEFF_API_URL`` / ``SEFF_MODEL``.
 
         The deadline is ``timeout_s`` when given, else ``SEFF_TIMEOUT_S``, else ``S1A_DECISION_TIMEOUT_S``/5 s.
+        ``transport`` is a test seam; ``None`` uses the real network transport.
         """
         api_key = _required("SEFF_API_KEY", "key")
         url = _required("SEFF_API_URL", "endpoint")
         model = (os.getenv("SEFF_MODEL") or "").strip() or DEFAULT_SEFF_MODEL
         deadline = timeout_s if timeout_s is not None else seff_timeout_from_env()
-        return cls(JevDecisionsClient(api_key=api_key, url=url, model=model, timeout_s=deadline))
+        return cls(JevDecisionsClient(api_key=api_key, url=url, model=model, timeout_s=deadline, transport=transport))

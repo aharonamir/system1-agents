@@ -32,7 +32,7 @@ DECIDE_MODEL_NAMES = (
 def parser() -> argparse.ArgumentParser:
     build = argparse.ArgumentParser(
         prog="s1a",
-        description="S1A agents: System 1 decision models (TypeSafe Jev, Laya, Cua-S1) in the model slot of openJiuwen agents.",
+        description="S1A agents: System 1 decision models (TypeSafe Jev, Seff, Laya, Cua-S1) in the model slot of openJiuwen agents.",
     )
     commands = build.add_subparsers(dest="command", required=True)
     commands.add_parser("list", help="the registered agents, one name per line")
