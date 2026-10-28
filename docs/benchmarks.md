@@ -1,26 +1,58 @@
 # Benchmarks: Jev against the chat model in the same agent
 
 Every number here compares a System 1 decision model against a chat model in the same agent, on the same tools and
-the same seeds. The model is the only difference between the two columns.
+the same seeds. The model is the only difference between the columns.
 
 ## Six agents, one episode each
 
-One episode per agent on one seed, both sides on the wall clock. The replays are under `assets/demos/` and in the
-README.
+One episode per agent on one seed, every model on the wall clock. The replays are the September runs under
+`assets/demos/` and in the README; the Jev and Seff columns are the 2026-10-28 rerun described below.
 
-<!-- placeholder: name the chat model behind the "chat model" columns (the MODEL_NAME of these runs). -->
+<!-- The chat-model column is the September 2026 run; its MODEL_NAME was not recorded. The Jev and Seff columns
+are the 2026-10-28 rerun below. -->
 
-| scenario | Jev | chat model | speedup | Jev cost | chat model cost | more expensive | score, Jev / chat model |
+| scenario | Jev | Seff | chat model | Jev cost | Seff cost | chat model cost | score, Jev / Seff / chat |
 |---|---|---|---|---|---|---|---|
-| Ticket router, 30 tickets | 12.7 s | 65.3 s | 5.14× | $0.000764 | $0.014800 | 19.4× | 30 / 30 |
-| Desktop, Windows Calculator | 17.2 s | 30.1 s | 1.75× | $0.000447 | $0.003002 | 6.7× | 1 / 1 |
-| ALFWorld | 7.4 s | 25.7 s | 3.47× | $0.000221 | $0.002800\* | 12.7× | 1 / 1 |
-| 2048, 20 moves | 27.1 s | 68.5 s | 2.53× | $0.000447 | $0.006139 | 13.7× | 64 / 80 |
-| Millionaire | 15.3 s | 21.6 s | 1.41× | $0.000168 | $0.000892 | 5.3× | $1,000 / $0 |
-| Blackjack | 2.3 s | 14.7 s | 6.39× | $0.000021 | $0.000531 | 25.3× | 1 / 1 |
+| Ticket router, 30 tickets | 11.0 s | 17.2 s | 65.3 s | $0.000764 | $0.00‡ | $0.014800 | 30 / 18 / 30 |
+| Desktop, Windows Calculator§ | 17.2 s | not rerun | 30.1 s | $0.000447 | — | $0.003002 | 1 / — / 1 |
+| ALFWorld§ | 7.4 s | not rerun | 25.7 s | $0.000221 | — | $0.002800\* | 1 / — / 1 |
+| 2048, 20 moves | 21.5 s | 21.8 s | 68.5 s | $0.000447 | $0.00‡ | $0.006139 | 68 / 68 / 80 |
+| Millionaire¶ | 7.7 s | 3.8 s | 21.6 s | $0.000105 | $0.00‡ | $0.000892 | $0 / $0 / $0 |
+| Blackjack | 0.9 s | 0.9 s | 14.7 s | $0.000021 | $0.00‡ | $0.000531 | -1 / -1 / 1 |
 
 \* Estimated; the chat-model run recorded no cost. A score of 1 is a won hand, a solved household task or a window
 that shows the expected result. The browser row is in the next section.
+‡ Seff is free and text-only. Its host returns no `usage`, so the job folders record the decision cost as unknown
+(n/a); the value shown is the chat-model share, which is zero because no Seff run called the chat model.
+§ September run; not rerun. The Jev and chat cells of these rows are unchanged, and Seff has no number.
+¶ Millionaire draws its six ladders from Open Trivia DB on the first run of a checkout; these runs use the draw in
+the archive, not the September draw, so the chat model's $0 is on a different ladder.
+
+The Jev and Seff columns are one episode each, seed 0, run back to back on 2026-10-28 on one Linux x86_64 machine
+(WSL2): Jev is `typesafe/jev-1.13` through OpenRouter, Seff is `seff-1.0` at the configured host. 2048 uses 20 moves
+and `--rethink on`; the other three use `--rethink off`. The desktop and ALFWorld rows are the September runs and
+were not rerun (desktop needs Cua Driver on Windows/macOS; ALFWorld was dropped for this pass). The chat column is
+the September run too — its chat model was not recorded — so it is a reference, not a same-day baseline.
+
+Against Jev, the chat model is 5.9× slower and 19.4× more expensive on the ticket router, 1.8× and 6.7× on the
+desktop, 3.5× and 12.7× (estimated) on ALFWorld, 3.2× and 13.7× on 2048, 2.8× and 8.5× on Millionaire, and 16.3×
+and 25.3× on Blackjack. Seff is 1.6× slower than Jev on the ticket router, level on 2048 (1.01×) and Blackjack, and
+2.0× faster on Millionaire; it costs nothing.
+
+Seff's answer quality is the finding, not its latency. On the ticket router it routed every ticket but got 18 right:
+payment, returns and account were 6/6 each, while logistics went four times to returns and twice to account, and
+human went four times to account, once to payment and once to returns — Seff never chose human. Jev got 30/30. The
+2048 episode tied at 68 points with the same largest tile (16), though Seff's choices were less sharp (median
+confidence about 0.50 against Jev's 0.77). On the seed-0 Blackjack hand both lost: Jev stood on 14 against the
+dealer's 5 and the dealer made 21; Seff hit the same 14, drew a queen and busted. On the Millionaire ladder both won
+nothing; Jev reached the $1,000 rung before missing, Seff the $200 rung. Seff's median decision was 403 ms against
+Jev's 323 ms on the ticket router, 332 vs 322 ms on 2048, 398 vs 322 ms on Millionaire and 418 vs 514 ms on
+Blackjack.
+
+The eight job folders and the Millionaire draw are in
+[`results/decision-seff/records-2026-10-28.tar.gz`](results/decision-seff/records-2026-10-28.tar.gz); unpack at the
+repository root and `uv run python -m evals.table evals/results` prints the rows. The record notes are in
+[`results/decision-seff/README.md`](results/decision-seff/README.md).
 
 ## Browser use: Allrecipes
 
